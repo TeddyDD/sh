@@ -824,6 +824,51 @@ func TestPrintFunctionNextLine(t *testing.T) {
 	}
 }
 
+func TestPrintKeywordNewLine(t *testing.T) {
+	t.Parallel()
+	tests := [...]printCase{
+		{
+			"if foo; then bar; fi",
+			"if foo\nthen\n\tbar\nfi",
+		},
+		{
+			"if foo; then x; else z; fi",
+			"if foo\nthen\n\tx\nelse\n\tz\nfi",
+		},
+		{
+			"if foo; then x; elif bar; then y; fi",
+			"if foo\nthen\n\tx\nelif bar\nthen\n\ty\nfi",
+		},
+		{
+			"if foo; then x; elif bar; then y; else z; fi",
+			"if foo\nthen\n\tx\nelif bar\nthen\n\ty\nelse\n\tz\nfi",
+		},
+		{
+			"while x; do y; done",
+			"while x\ndo\n\ty\ndone",
+		},
+		{
+			"until x; do y; done",
+			"until x\ndo\n\ty\ndone",
+		},
+		{
+			"for i in a b; do bar; done",
+			"for i in a b\ndo\n\tbar\ndone",
+		},
+		{
+			"select i in a b; do bar; done",
+			"select i in a b\ndo\n\tbar\ndone",
+		},
+	}
+	parser := NewParser(KeepComments(true))
+	printer := NewPrinter(KeywordNewLine(true))
+	for i, tc := range tests {
+		t.Run(fmt.Sprintf("%03d", i), func(t *testing.T) {
+			printTest(t, parser, printer, tc.in, tc.want)
+		})
+	}
+}
+
 func TestPrintSpaceRedirects(t *testing.T) {
 	t.Parallel()
 	tests := [...]printCase{

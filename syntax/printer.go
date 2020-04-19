@@ -92,6 +92,12 @@ func FunctionNextLine(enabled bool) PrinterOption {
 	return func(p *Printer) { p.funcNextLine = enabled }
 }
 
+// KeywordNewLine will place keywords like 'do', 'done', 'then', 'elif', 'else'
+// and 'fi' on a new line.
+func KeywordNewLine(enabled bool) PrinterOption {
+	return func(p *Printer) { p.keywordNewLine = enabled }
+}
+
 // NewPrinter allocates a new Printer and applies any number of options.
 func NewPrinter(opts ...PrinterOption) *Printer {
 	p := &Printer{
@@ -224,6 +230,7 @@ type Printer struct {
 	minify         bool
 	singleLine     bool
 	funcNextLine   bool
+	keywordNewLine bool
 
 	wantSpace   bool // space is wanted or required
 	wantNewline bool // newline is wanted for pretty-printing; ignored by singleLine; ignored by singleLine
@@ -1065,8 +1072,11 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 			p.spacedString("while", x.Pos())
 		}
 		p.nestedStmts(x.Cond, x.CondLast, Pos{})
+		p.wantNewline = p.wantNewline || p.keywordNewLine
 		p.semiOrNewl("do", x.DoPos)
+		p.wantNewline = p.wantNewline || p.keywordNewLine
 		p.nestedStmts(x.Do, x.DoLast, x.DonePos)
+		p.wantNewline = p.wantNewline || p.keywordNewLine
 		p.semiRsrv("done", x.DonePos)
 	case *ForClause:
 		if x.Select {
@@ -1075,8 +1085,11 @@ func (p *Printer) command(cmd Command, redirs []*Redirect) (startRedirs int) {
 			p.WriteString("for ")
 		}
 		p.loop(x.Loop)
+		p.wantNewline = p.wantNewline || p.keywordNewLine
 		p.semiOrNewl("do", x.DoPos)
+		p.wantNewline = p.wantNewline || p.keywordNewLine
 		p.nestedStmts(x.Do, x.DoLast, x.DonePos)
+		p.wantNewline = p.wantNewline || p.keywordNewLine
 		p.semiRsrv("done", x.DonePos)
 	case *BinaryCmd:
 		p.stmt(x.X)
@@ -1242,16 +1255,19 @@ func (p *Printer) ifClause(ic *IfClause, elif bool) {
 		p.spacedString("if", ic.Pos())
 	}
 	p.nestedStmts(ic.Cond, ic.CondLast, Pos{})
+	p.wantNewline = p.wantNewline || p.keywordNewLine
 	p.semiOrNewl("then", ic.ThenPos)
 	thenEnd := ic.FiPos
 	el := ic.Else
 	if el != nil {
 		thenEnd = el.Position
 	}
+	p.wantNewline = p.wantNewline || p.keywordNewLine
 	p.nestedStmts(ic.Then, ic.ThenLast, thenEnd)
 
 	if el != nil && el.ThenPos.IsValid() {
 		p.comments(ic.Last...)
+		p.wantNewline = p.wantNewline || p.keywordNewLine
 		p.semiRsrv("elif", el.Position)
 		p.ifClause(el, true)
 		return
@@ -1267,11 +1283,14 @@ func (p *Printer) ifClause(ic *IfClause, elif bool) {
 			}
 			p.comments(c)
 		}
+		p.wantNewline = p.wantNewline || p.keywordNewLine
 		p.semiRsrv("else", el.Position)
+		p.wantNewline = p.wantNewline || p.keywordNewLine
 		p.comments(left...)
 		p.nestedStmts(el.Then, el.ThenLast, ic.FiPos)
 		p.comments(el.Last...)
 	}
+	p.wantNewline = p.wantNewline || p.keywordNewLine
 	p.semiRsrv("fi", ic.FiPos)
 }
 

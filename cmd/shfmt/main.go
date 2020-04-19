@@ -51,6 +51,8 @@ var (
 	keepPadding = flag.Bool("kp", false, "")
 	funcNext    = flag.Bool("fn", false, "")
 
+	keywordNewLine = flag.Bool("knl", false, "")
+
 	toJSON = flag.Bool("tojson", false, "")
 
 	parser            *syntax.Parser
@@ -102,6 +104,7 @@ Printer options:
   -sr       redirect operators will be followed by a space
   -kp       keep column alignment paddings
   -fn       function opening braces are placed on a separate line
+  -knl      place shell keywords like 'then' and 'do' on a new line
 
 Utilities:
 
@@ -137,7 +140,7 @@ For more information, see 'man shfmt' and https://github.com/mvdan/sh.
 	}
 	flag.Visit(func(f *flag.Flag) {
 		switch f.Name {
-		case "ln", "p", "i", "bn", "ci", "sr", "kp", "fn":
+		case "ln", "p", "i", "bn", "ci", "sr", "kp", "fn", "knl":
 			useEditorConfig = false
 		}
 	})
@@ -160,6 +163,7 @@ For more information, see 'man shfmt' and https://github.com/mvdan/sh.
 		syntax.SpaceRedirects(*spaceRedirs)(printer)
 		syntax.KeepPadding(*keepPadding)(printer)
 		syntax.FunctionNextLine(*funcNext)(printer)
+		syntax.KeywordNewLine(*keywordNewLine)(printer)
 	}
 
 	if os.Getenv("FORCE_COLOR") == "true" {
