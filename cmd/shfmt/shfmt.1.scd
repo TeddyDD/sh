@@ -74,6 +74,10 @@ predictable. Some aspects of the format can be configured via printer flags.
 *-fn*
 	Function opening braces are placed on a separate line.
 
+*-knl*
+	Place shell keywords like 'then' and 'do' on a new line.
+
+
 ## Utility flags
 
 *-f*
